@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:tolls/screens/cost_sheet.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:tolls/bloc/toll_cubit.dart';
 import 'package:tolls/screens/entry_screen.dart';
-import 'package:tolls/screens/exit_screen.dart';
 import 'package:tolls/utils/app_theme.dart';
 
 void main() {
@@ -19,10 +19,13 @@ class ETollApp extends StatelessWidget {
         statusBarBrightness: Brightness.light,
       ),
     );
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme().selectLightTheme(),
-      home: const EntryScreen(),
+    return BlocProvider(
+      create: (context) => TollCubit(),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme().selectLightTheme(),
+        home: const EntryScreen(),
+      ),
     );
   }
 }

@@ -43,13 +43,13 @@ class AppTextField extends StatefulWidget {
 }
 
 class _AppTextFieldState extends State<AppTextField> {
-  bool _obscureText = true;
+  final bool _obscureText = true;
 
-  void _changeTextVisibility() {
-    setState(() {
-      _obscureText = !_obscureText;
-    });
-  }
+  // void _changeTextVisibility() {
+  //   setState(() {
+  //     _obscureText = !_obscureText;
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {

@@ -11,9 +11,15 @@ class TollInitialState extends TollCubitState {}
 
 class LoadingState extends TollCubitState {}
 
-class TollEntryState extends TollCubitState {}
+class TollEntryState extends TollCubitState {
+  @override
+  List<Object> get props => [];
+}
 
-class TollExitState extends TollCubitState {}
+class TollExitState extends TollCubitState {
+  @override
+  List<Object> get props => [];
+}
 
 // class EntryDateTimeState extends TollCubitState {
 //   final String entryDate;
@@ -29,11 +35,13 @@ class TollExitState extends TollCubitState {}
 //   const ExitDateTimeState(this.exitDate, this.time);
 // }
 
-// class TotalCostState extends TollCubitState {
-//   final double totalCost;
+class TollFaresCalculatedState extends TollCubitState {
+  final double totalCost;
 
-//   const TotalCostState(this.totalCost);
-// }
+  const TollFaresCalculatedState(this.totalCost);
+  @override
+  List<Object> get props => [totalCost];
+}
 
 // class NumberPlateState extends TollCubitState {
 //   final int numberPlate;

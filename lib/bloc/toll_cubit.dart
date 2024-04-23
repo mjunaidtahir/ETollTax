@@ -83,10 +83,6 @@ class TollCubit extends Cubit<TollCubitState> {
     if (selectedEntryInterchange == null || selectedExitInterchange == null) {
       emit(const FailedState("Please select both entry and exit interchanges"));
       return;
-    } else if (selectedEntryInterchange!.distance >
-        selectedExitInterchange!.distance) {
-      emit(const FailedState("Entry Distance Must be less than Exit point"));
-      return;
     } else if (exitDateTime == null) {
       emit(const FailedState("Please select exit date and time"));
       return;
@@ -102,8 +98,9 @@ class TollCubit extends Cubit<TollCubitState> {
           const FailedState("Exit interchange cannot be the Zero Interchange"));
       return;
     } else if (exitFormKey.currentState!.validate()) {
-      distance = selectedExitInterchange!.distance.toDouble() -
-          selectedEntryInterchange!.distance.toDouble();
+      distance = (selectedExitInterchange!.distance.toDouble() -
+              selectedEntryInterchange!.distance.toDouble())
+          .abs();
       distanceCost = distance * distanceRate;
 
       if (exitDateTime!.weekday == DateTime.saturday ||

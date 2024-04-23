@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:tolls/models/interChange.dart';
 
 abstract class TollCubitState extends Equatable {
   const TollCubitState();
@@ -21,20 +22,6 @@ class TollExitState extends TollCubitState {
   List<Object> get props => [];
 }
 
-// class EntryDateTimeState extends TollCubitState {
-//   final String entryDate;
-//   final String time;
-
-//   const EntryDateTimeState(this.entryDate, this.time);
-// }
-
-// class ExitDateTimeState extends TollCubitState {
-//   final String exitDate;
-//   final String time;
-
-//   const ExitDateTimeState(this.exitDate, this.time);
-// }
-
 class TollFaresCalculatedState extends TollCubitState {
   final double totalCost;
 
@@ -43,14 +30,24 @@ class TollFaresCalculatedState extends TollCubitState {
   List<Object> get props => [totalCost];
 }
 
-// class NumberPlateState extends TollCubitState {
-//   final int numberPlate;
-
-//   const NumberPlateState(this.numberPlate);
-// }
-
 class FailedState extends TollCubitState {
   final String errorMessage;
 
   const FailedState(this.errorMessage);
+}
+
+class EntryInterChangeState extends TollCubitState {
+  Interchange interChange;
+
+  EntryInterChangeState(this.interChange);
+  @override
+  List<Object> get props => [interChange];
+}
+
+class ExitInterChangeState extends TollCubitState {
+  Interchange interChange;
+
+  ExitInterChangeState(this.interChange);
+  @override
+  List<Object> get props => [interChange];
 }

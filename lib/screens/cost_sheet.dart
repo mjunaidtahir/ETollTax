@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tolls/bloc/toll_cubit.dart';
 import 'package:tolls/bloc/toll_states.dart';
+import 'package:tolls/utils/app_navigaors.dart';
 
 class TotalCostWidget extends StatelessWidget {
   const TotalCostWidget({super.key});
@@ -39,7 +40,7 @@ class TotalCostWidget extends StatelessWidget {
                       ),
                       const Spacer(),
                       Text(
-                        "${double.parse(cubit.baseRate.toString())}",
+                        "${double.parse(cubit.baseRate.toStringAsFixed(2))}",
                         style: const TextStyle(fontSize: 18),
                       ),
                     ],
@@ -52,7 +53,7 @@ class TotalCostWidget extends StatelessWidget {
                       ),
                       const Spacer(),
                       Text(
-                        "${double.parse(cubit.distanceCost.toString())}",
+                        "${double.parse(cubit.distanceCost.toStringAsFixed(2))}",
                         style: const TextStyle(fontSize: 18),
                       ),
                     ],
@@ -65,7 +66,7 @@ class TotalCostWidget extends StatelessWidget {
                       ),
                       const Spacer(),
                       Text(
-                        "${double.parse(cubit.distanceCost.toString())}",
+                        "${double.parse(cubit.totalFare.toStringAsFixed(2))}",
                         style: const TextStyle(fontSize: 18),
                       ),
                     ],
@@ -78,7 +79,7 @@ class TotalCostWidget extends StatelessWidget {
                       ),
                       const Spacer(),
                       Text(
-                        "${double.parse(cubit.distanceCost.toString())}",
+                        "${double.parse(cubit.totalDiscount.toStringAsFixed(2))}",
                         style: const TextStyle(fontSize: 18),
                       ),
                     ],
@@ -91,13 +92,17 @@ class TotalCostWidget extends StatelessWidget {
                       ),
                       const Spacer(),
                       Text(
-                        "${double.parse(cubit.distanceCost.toString())}",
+                        "${double.parse(cubit.totalCost.toStringAsFixed(2))}",
                         style: const TextStyle(fontSize: 18),
                       ),
                     ],
                   ),
                   const SizedBox(height: 30),
-                  ElevatedButton(onPressed: () {}, child: const Text("Done"))
+                  ElevatedButton(
+                      onPressed: () {
+                        AppNavigator.pop(context);
+                      },
+                      child: const Text("Done"))
                 ],
               ),
             ),

@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tolls/bloc/toll_states.dart';
 import 'package:tolls/models/interChange.dart';
+import 'package:tolls/utils/app_constants.dart';
 
 class TollCubit extends Cubit<TollCubitState> {
   TollCubit() : super(TollInitialState());
+
   final entryFormKey = GlobalKey<FormState>();
   final exitFormKey = GlobalKey<FormState>();
 
@@ -20,10 +22,13 @@ class TollCubit extends Cubit<TollCubitState> {
   double holidayDiscount = 0.5;
   double distance = 0;
   double distanceCost = 0;
-  Interchange? selectedEntryInterchange;
-  Interchange? selectedExitInterchange;
+  double totalFare = 0;
+  double totalCost = 0;
+  double totalDiscount = 0;
   DateTime? entryDateTime;
   DateTime? exitDateTime;
+  Interchange? selectedEntryInterchange;
+  Interchange? selectedExitInterchange;
 
   List<DateTime> nationalHolidays = [
     DateTime(DateTime.now().year, DateTime.march, 23),
@@ -33,15 +38,18 @@ class TollCubit extends Cubit<TollCubitState> {
 
   void onSelectedEntryInterchange(Interchange interchange) {
     selectedEntryInterchange = interchange;
+    emit(EntryInterChangeState(interchange));
   }
 
   void onSelectedExitInterchange(Interchange interchange) {
     emit(LoadingState());
     if (selectedEntryInterchange == interchange) {
+      selectedExitInterchange = null;
       emit(const FailedState(
           "Entry Point and Exit Point Should Not be the same"));
     } else {
       selectedExitInterchange = interchange;
+      emit(ExitInterChangeState(interchange));
     }
   }
 
@@ -55,15 +63,11 @@ class TollCubit extends Cubit<TollCubitState> {
 
   void saveEntry() {
     emit(LoadingState());
-
     if (selectedEntryInterchange == null) {
       emit(const FailedState("Please select entry interchange"));
       return;
     } else if (entryDateTime == null) {
       emit(const FailedState("Please select entry date and time"));
-      return;
-    } else if (entryDateTime!.isBefore(DateTime.now())) {
-      emit(const FailedState("Entry date and time cannot be in the past"));
       return;
     } else if (entryFormKey.currentState!.validate()) {
       emit(TollEntryState());
@@ -76,9 +80,12 @@ class TollCubit extends Cubit<TollCubitState> {
 
   void calculateFares() {
     emit(LoadingState());
-
-    if (selectedEntryInterchange == null && selectedExitInterchange == null) {
-      emit(const FailedState("Please select exit interchange"));
+    if (selectedEntryInterchange == null || selectedExitInterchange == null) {
+      emit(const FailedState("Please select both entry and exit interchanges"));
+      return;
+    } else if (selectedEntryInterchange!.distance >
+        selectedExitInterchange!.distance) {
+      emit(const FailedState("Entry Distance Must be less than Exit point"));
       return;
     } else if (exitDateTime == null) {
       emit(const FailedState("Please select exit date and time"));
@@ -87,60 +94,59 @@ class TollCubit extends Cubit<TollCubitState> {
         exitNumberPlateController.text) {
       emit(const FailedState("Entry and Exit Number Plate Should be the Same"));
       return;
-    } else if (exitDateTime!.isBefore(DateTime.now())) {
+    } else if (exitDateTime!.isBefore(entryDateTime!)) {
       emit(const FailedState("Exit date and time cannot be in the past"));
       return;
+    } else if (selectedExitInterchange == AppConstants.interchanges[0]) {
+      emit(
+          const FailedState("Exit interchange cannot be the Zero Interchange"));
+      return;
     } else if (exitFormKey.currentState!.validate()) {
-      emit(TollExitState());
-      double totalFare = baseRate;
-
-      distance = selectedEntryInterchange!.distance.toDouble() +
-          selectedExitInterchange!.distance.toDouble();
-
-      totalFare += distance * distanceRate;
+      distance = selectedExitInterchange!.distance.toDouble() -
+          selectedEntryInterchange!.distance.toDouble();
+      distanceCost = distance * distanceRate;
 
       if (exitDateTime!.weekday == DateTime.saturday ||
           exitDateTime!.weekday == DateTime.sunday) {
-        totalFare *= weekendRateMultiplier;
-      }
-      if (exitDateTime!.weekday == DateTime.monday ||
-          exitDateTime!.weekday == DateTime.wednesday) {
-        int lastDigit = int.tryParse(exitNumberPlateController.text
-                .substring(exitNumberPlateController.text.length - 1)) ??
-            0;
-        if (lastDigit % 2 == 0) {
-          totalFare *= (1 - evenOddDiscount);
-        }
-      } else if (exitDateTime!.weekday == DateTime.tuesday ||
-          exitDateTime!.weekday == DateTime.thursday) {
-        int lastDigit = int.tryParse(exitNumberPlateController.text
-                .substring(exitNumberPlateController.text.length - 1)) ??
-            0;
-        if (lastDigit % 2 != 0) {
-          totalFare *= (1 - evenOddDiscount);
-        }
+        distanceCost *= weekendRateMultiplier;
       }
 
-      if (nationalHolidays.contains(exitDateTime!)) {
-        totalFare *= (1 - holidayDiscount);
+      bool isEvenPlate = int.tryParse(exitNumberPlateController.text
+                  .substring(exitNumberPlateController.text.length - 1))! %
+              2 ==
+          0;
+      if ((exitDateTime!.weekday == DateTime.monday ||
+              exitDateTime!.weekday == DateTime.wednesday) &&
+          isEvenPlate) {
+        distanceCost *= (1 - evenOddDiscount);
+      } else if ((exitDateTime!.weekday == DateTime.tuesday ||
+              exitDateTime!.weekday == DateTime.thursday) &&
+          !isEvenPlate) {
+        distanceCost *= (1 - evenOddDiscount);
       }
-      printFareDetails(totalFare);
+
+      if (nationalHolidays.contains(DateTime(
+          exitDateTime!.year, exitDateTime!.month, exitDateTime!.day))) {
+        distanceCost *= (1 - holidayDiscount);
+      }
+
+      totalFare = baseRate + distanceCost;
+      totalCost = baseRate + (distance * distanceRate);
+      totalDiscount = totalCost - totalFare;
+
+      printFareDetails(totalFare, totalCost, totalDiscount);
+
       emit(TollFaresCalculatedState(totalFare));
-      return;
     } else {
       emit(const FailedState("Please fill all the fields"));
-      return;
     }
   }
 
-  void printFareDetails(double totalFare) {
-    distance = selectedEntryInterchange!.distance.toDouble() +
-        selectedExitInterchange!.distance.toDouble();
-
-    print('Total Distance Traveled: $distance KM');
-    print('Total Fare: $totalFare rupees');
-    double totalCost = baseRate + (distance * distanceRate);
-    double totalDiscount = totalCost - totalFare;
-    print('Total Discount: $totalDiscount rupees');
+  void printFareDetails(
+      double totalFare, double totalCost, double totalDiscount) {
+    debugPrint('Total Distance Traveled: $distance KM');
+    debugPrint('Total Fare: $totalFare rupees');
+    debugPrint('Total Discount: $totalDiscount rupees');
+    debugPrint('Overall Total Cost: $totalCost rupees');
   }
 }
